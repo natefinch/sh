@@ -8,7 +8,16 @@ can make your code a lot easier to read when you have a simple shell-like
 line rather than a huge mess of pipes and commands.
 
 
-	fmt.Print(sh.Pipe(echo("Hi there!"), grep("Hi", "-o"), wc("-w")))
+	echo := sh.Cmd("echo")
+	
+	fmt.Print(echo("Hi there!"))
+	// output:
+	// Hi there!
+	
+	grep := sh.Cmd("grep", "-o")
+	wc := sh.Cmd("wc", "-w")
+	
+	fmt.Print(sh.Pipe(echo("Hi there!"), grep("Hi"), wc()))
 	// output:
 	// 1
 
