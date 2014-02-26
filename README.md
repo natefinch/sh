@@ -3,21 +3,22 @@
     import "github.com/natefinch/sh"
 
 Package sh is intended to make working with shell commands more shell-like.
-This package is basically just syntactic sugar wrapped around os/exec, but it
-can make your code a lot easier to read when you have a simple shell-like
-line rather than a huge mess of pipes and commands.
+This package is basically just syntactic sugar wrapped around
+labix.org/v2/pipe, which in turn just wraps os/exec, but it can make your
+code a lot easier to read when you have a simple shell-like line rather than
+a huge mess of pipes and commands and conversions etc.
 
 
+	// create functions that runs the echo, grep, and wc shell commands
 	echo := sh.Cmd("echo")
+	grep := sh.Cmd("grep")
+	wc := sh.Cmd("wc")
 	
-	fmt.Print(echo("Hi there!"))
-	// output:
-	// Hi there!
+	// run echo, pipe the output through grep and then through wc
+	// effectively the same as
+	// $ echo Hi there! | grep -o Hi | wc -w
+	fmt.Print(sh.Pipe(echo("Hi there!"), grep("-o", "Hi"), wc("-w")))
 	
-	grep := sh.Cmd("grep", "-o")
-	wc := sh.Cmd("wc", "-w")
-	
-	fmt.Print(sh.Pipe(echo("Hi there!"), grep("Hi"), wc()))
 	// output:
 	// 1
 
@@ -28,50 +29,90 @@ line rather than a huge mess of pipes and commands.
 
 ## func Cmd
 ``` go
-func Cmd(name string, args ...string) func(args ...string) Command
+func Cmd(name string, args0 ...string) func(args ...string) Executable
 ```
-Cmd returns a function that runs the given command with the given args.  The
-args that are passed to Cmd cannot be overridden, but the function that is
-returned can add more arguments when you call it.
+Cmd returns a function that will return an Executable for the given command
+with the given args.  This is a convenience for defining functions for
+commonly reused Executables, such as grep, ls, mkdir, etc.
+
+The args that are passed to Cmd are passed to the Executable when the
+returned function is run, allowing you to pre-set some common arguments.
 
 
-## func Pipe
+
+## type Executable
 ``` go
-func Pipe(cmds ...Command) pipeResult
+type Executable struct {
+    pipe.Pipe
+}
 ```
-Pipe connects the output of one Command to the input of the next Command,
-returning immediately if any of the commands produce an error.  The result is
-a function that returns the output of the last function run, and any error it
-might have had.  Alternatively, you can call String() on the result to get
-just the output. You may also pass the result into a fmt.Print-style function
-as if it were a string.
+Executable is a runnable construct.  You can run it by calling Run(), or by
+calling String() (which is automatically done when passing it into a
+fmt.Print style function).  It can be passed into Pipe to form a chain of
+Executables that are executed in series.
 
 
 
-## type Command
+
+
+
+
+
+
+### func Dump
 ``` go
-type Command func(arg ...string) (string, error)
+func Dump(filename string) Executable
 ```
-Command is the type that is returned from running a Cmd.  You can pass it
-into a fmt.Print style function as if it were a string and it'll do the right
-thing, or you can execute it to get the output and any errors, or call
-String() to just get the output.
+Dump returns an excutable that will read the given file and dump its contents
+as the Executable's stdout.
 
 
-
-
-
-
-
-
-
-
-
-### func (Command) String
+### func Pipe
 ``` go
-func (c Command) String() string
+func Pipe(cmds ...Executable) Executable
 ```
-String implements Stringer.String
+Pipe connects the output of one Executable to the input of the next
+Executable in the list.  The result is an Executable that, when run, returns
+the output of the last Executable run, and any error it might have had.
+
+If any of the Executables fails, no further Executables are run, and the
+failing Executable's stderr and error are returned.
+
+
+### func PipeWith
+``` go
+func PipeWith(stdin string, cmds ...Executable) Executable
+```
+PipeWith functions like Pipe, but runs the first command with stdin as the
+input.
+
+
+### func Read
+``` go
+func Read(r io.Reader) Executable
+```
+Read returns an executable that will read from the given reader and use it as
+the Executable's stdout.
+
+
+
+
+### func (Executable) Run
+``` go
+func (c Executable) Run(stdin string) (string, error)
+```
+Run executes the command with the given string as standard input, and returns
+stdout and a nil error on success, or stderr and a non-nil error on failure.
+
+
+
+### func (Executable) String
+``` go
+func (c Executable) String() string
+```
+String runs the Executable and returns the standard output as a string,
+ignoring any error.  This is most useful for passing an executable into a
+fmt.Print style function.
 
 
 
