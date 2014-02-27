@@ -1,4 +1,3 @@
-
 # sh
     import "github.com/natefinch/sh"
 
@@ -8,23 +7,22 @@ labix.org/v2/pipe, which in turn just wraps os/exec, but it can make your
 code a lot easier to read when you have a simple shell-like line rather than
 a huge mess of pipes and commands and conversions etc.
 
-
-	// create functions that runs the echo, grep, and wc shell commands
-	echo := sh.Cmd("echo")
-	grep := sh.Cmd("grep")
-	wc := sh.Cmd("wc")
+#####Example:
+``` go
+// create functions that runs the echo, grep, and wc shell commands
+echo := sh.Cmd("echo")
+grep := sh.Cmd("grep")
+wc := sh.Cmd("wc")
 	
-	// run echo, pipe the output through grep and then through wc
-	// effectively the same as
-	// $ echo Hi there! | grep -o Hi | wc -w
-	fmt.Print(sh.Pipe(echo("Hi there!"), grep("-o", "Hi"), wc("-w")))
-	
-	// output:
-	// 1
-
-
-
-
+// run echo, pipe the output through grep and then through wc
+// effectively the same as
+// $ echo Hi there! | grep -o Hi | wc -w
+fmt.Print(sh.Pipe(echo("Hi there!"), grep("-o", "Hi"), wc("-w")))
+```	
+#####Output:
+```
+1
+```
 
 
 ## func Cmd
@@ -39,12 +37,18 @@ The args that are passed to Cmd are passed to the Executable when the
 returned function is run, allowing you to pre-set some common arguments.
 
 
-Example:
-	echo := sh.Cmd("echo")
-	
-	fmt.Print(echo("Hi there!"))
-	// output:
-	// Hi there!
+##### Example:
+``` go	
+echo := sh.Cmd("echo")
+
+fmt.Print(echo("Hi there!"))
+```
+
+##### Output:
+```
+Hi there!
+```
+
 ## func Runner
 ``` go
 func Runner(name string, args0 ...string) func(args ...string) string
@@ -57,15 +61,21 @@ The args that are passed to Runner are passed to the shell command when the
 returned function is run, allowing you to pre-set some common arguments.
 
 
-Example:
-	echo := sh.Runner("echo")
+##### Example:
 	
-	// functions created with runner call the underlying shell command
-	// immediately and return its standard output.
-	var s string = echo("Hi there!")
-	fmt.Print(s)
-	// output:
-	// Hi there!
+``` go
+echo := sh.Runner("echo")
+	
+// functions created with runner call the underlying shell command
+// immediately and return its standard output.
+var s string = echo("Hi there!")
+fmt.Print(s)
+```
+##### Output:
+
+```
+Hi there!
+```
 
 ## type Executable
 ``` go
@@ -94,17 +104,23 @@ Dump returns an excutable that will read the given file and dump its contents
 as the Executable's stdout.
 
 
-Example:
-	grep := sh.Cmd("grep")
-	
-	name := "ExampleDumpTest"
-	defer writeTempFile(name, SWCrawl)()
-	
-	// Equivalent of shell command
-	// $ cat ExampleDumpTest | grep far
-	fmt.Print(sh.Pipe(sh.Dump(name), grep("far")))
-	// output:
-	// A long time ago, in a galaxy far, far away....
+##### Example:
+``` go
+grep := sh.Cmd("grep")
+
+name := "ExampleDumpTest"
+defer writeTempFile(name, SWCrawl)()
+
+// Equivalent of shell command
+// $ cat ExampleDumpTest | grep far
+fmt.Print(sh.Pipe(sh.Dump(name), grep("far")))
+```
+
+##### Output:
+```
+A long time ago, in a galaxy far, far away....
+```
+
 ### func Pipe
 ``` go
 func Pipe(cmds ...Executable) Executable
@@ -117,18 +133,26 @@ If any of the Executables fails, no further Executables are run, and the
 failing Executable's stderr and error are returned.
 
 
-Example:
-	echo := sh.Cmd("echo")
+##### Example:
+
+``` go
+echo := sh.Cmd("echo")
 	
-	// note, you can "bake in" arguments when you create these functions.
-	upper := sh.Cmd("tr", "[:lower:]", "[:upper:]")
-	grep := sh.Cmd("grep")
-	
-	// Equivalent of shell command:
-	// $ echo Hi there! | grep -o Hi | wc -w
-	fmt.Print(sh.Pipe(echo(SWCrawl), grep("far"), upper()))
-	// output:
-	// A LONG TIME AGO, IN A GALAXY FAR, FAR AWAY....
+// note, you can "bake in" arguments when you create these functions.
+upper := sh.Cmd("tr", "[:lower:]", "[:upper:]")
+grep := sh.Cmd("grep")
+
+// Equivalent of shell command:
+// $ echo Hi there! | grep -o Hi | wc -w
+fmt.Print(sh.Pipe(echo(SWCrawl), grep("far"), upper()))
+```
+
+##### Output:
+
+```
+A LONG TIME AGO, IN A GALAXY FAR, FAR AWAY....
+```
+
 ### func PipeWith
 ``` go
 func PipeWith(stdin string, cmds ...Executable) Executable
@@ -137,13 +161,19 @@ PipeWith functions like Pipe, but runs the first command with stdin as the
 input.
 
 
-Example:
-	upper := sh.Cmd("tr", "[:lower:]", "[:upper:]")
-	grep := sh.Cmd("grep")
+##### Example:
+``` go
+upper := sh.Cmd("tr", "[:lower:]", "[:upper:]")
+grep := sh.Cmd("grep")
 	
-	fmt.Print(sh.PipeWith(SWCrawl, grep("far"), upper()))
-	// output:
-	// A LONG TIME AGO, IN A GALAXY FAR, FAR AWAY....
+fmt.Print(sh.PipeWith(SWCrawl, grep("far"), upper()))
+```	
+
+##### Output:
+```
+A LONG TIME AGO, IN A GALAXY FAR, FAR AWAY....
+```
+
 ### func Read
 ``` go
 func Read(r io.Reader) Executable
@@ -152,16 +182,22 @@ Read returns an executable that will read from the given reader and use it as
 the Executable's stdout.
 
 
-Example:
-	grep := sh.Cmd("grep")
+##### Example:
+
+``` go
+grep := sh.Cmd("grep")
 	
-	name := "ExampleReadTest"
-	f, cleanup := openTempFile(name, SWCrawl)
-	defer cleanup()
-	
-	fmt.Print(sh.Pipe(sh.Read(f), grep("far")))
-	// output:
-	// A long time ago, in a galaxy far, far away....
+name := "ExampleReadTest"
+f, cleanup := openTempFile(name, SWCrawl)
+defer cleanup()
+
+fmt.Print(sh.Pipe(sh.Read(f), grep("far")))
+```
+
+##### Output:
+```
+A long time ago, in a galaxy far, far away....
+```
 
 
 ### func (Executable) Run
