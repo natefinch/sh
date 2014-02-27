@@ -36,6 +36,17 @@ func ExampleCmd() {
 	// Hi there!
 }
 
+func ExampleRunner() {
+	echo := sh.Runner("echo")
+
+	// functions created with runner call the underlying shell command
+	// immediately and return its standard output.
+	var s string = echo("Hi there!")
+	fmt.Print(s)
+	// output:
+	// Hi there!
+}
+
 func ExamplePipe() {
 	echo := sh.Cmd("echo")
 
@@ -62,15 +73,12 @@ func ExamplePipeWith() {
 func Example_String() {
 	echo := sh.Cmd("echo")
 
-	output := echo("Hi there!")
-
-	prnt := func(s string) {
-		fmt.Print(s)
-	}
+	executable := echo("Hi there!")
 
 	// Since we're passing the output into a function expecting a string, we
 	// have to call String() on the output of the command.
-	prnt(output.String())
+	var s string = executable.String()
+	fmt.Print(s)
 	// output:
 	// Hi there!
 }

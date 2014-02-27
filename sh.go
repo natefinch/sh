@@ -37,6 +37,18 @@ func Cmd(name string, args0 ...string) func(args ...string) Executable {
 	}
 }
 
+// Runner returns a function that will run the given shell command with
+// specified arguments. This is a convenience for creating one-off commands that
+// aren't going to be put into Pipe, but instead just run standalone.
+//
+// The args that are passed to Runner are passed to the shell command when the
+// returned function is run, allowing you to pre-set some common arguments.
+func Runner(name string, args0 ...string) func(args ...string) string {
+	return func(args1 ...string) string {
+		return Executable{pipe.Exec(name, append(args0, args1...)...)}.String()
+	}
+}
+
 // Dump returns an excutable that will read the given file and dump its contents
 // as the Executable's stdout.
 func Dump(filename string) Executable {
