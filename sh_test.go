@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"testing"
 
 	"github.com/natefinch/sh"
 )
@@ -106,6 +107,15 @@ func ExampleRead() {
 	fmt.Print(sh.Pipe(sh.Read(f), grep("far")))
 	// output:
 	// A long time ago, in a galaxy far, far away....
+}
+
+func TestString(t *testing.T) {
+	ex := sh.Cmd("thiswontwork")()
+	s := ex.String()
+	expected := "exec: \"thiswontwork\": executable file not found in $PATH"
+	if s != expected {
+		t.Errorf("expected %q, got %q", expected, s)
+	}
 }
 
 func openTempFile(name, content string) (f *os.File, cleanup func()) {

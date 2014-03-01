@@ -94,9 +94,10 @@ type Executable struct {
 	pipe.Pipe
 }
 
-// Run executes the command with the given string as standard input, and returns
-// stdout and a nil error on success, or stderr and a non-nil error on failure.
-func (c Executable) Run(stdin string) (string, error) {
+// RunWith executes the command with the given string as standard input, and
+// returns stdout and a nil error on success, or stderr and a non-nil error on
+// failure.
+func (c Executable) RunWith(stdin string) (string, error) {
 	stdout, stderr, err := pipe.DividedOutput(
 		pipe.Line(pipe.Read(strings.NewReader(stdin)), c.Pipe),
 	)
@@ -106,10 +107,27 @@ func (c Executable) Run(stdin string) (string, error) {
 	return string(stdout), nil
 }
 
-// String runs the Executable and returns the standard output as a string,
-// ignoring any error.  This is most useful for passing an executable into a
-// fmt.Print style function.
+// Run executes the command and returns stdout and a nil error on success, or
+// stderr and a non-nil error on failure.
+func (c Executable) Run() (string, error) {
+	stdout, stderr, err := pipe.DividedOutput(c.Pipe)
+	if err != nil {
+		return string(stderr), err
+	}
+	return string(stdout), nil
+}
+
+// String runs the Executable and returns the standard output if the command
+// succeeds, or stderr if the command fails.  If stderr is empty on failure, the
+// Error() value of the error is returned. This is most useful for passing an
+// executable into a fmt.Print style function.
 func (c Executable) String() string {
-	s, _ := pipe.Output(c.Pipe)
-	return string(s)
+	s, err := c.Run()
+	if err == nil {
+		return s
+	}
+	if s != "" {
+		return s
+	}
+	return err.Error()
 }
