@@ -200,12 +200,23 @@ A long time ago, in a galaxy far, far away....
 ```
 
 
+
 ### func (Executable) Run
 ``` go
-func (c Executable) Run(stdin string) (string, error)
+func (c Executable) Run() (string, error)
 ```
-Run executes the command with the given string as standard input, and returns
-stdout and a nil error on success, or stderr and a non-nil error on failure.
+Run executes the command and returns stdout and a nil error on success, or
+stderr and a non-nil error on failure.
+
+
+
+### func (Executable) RunWith
+``` go
+func (c Executable) RunWith(stdin string) (string, error)
+```
+RunWith executes the command with the given string as standard input, and
+returns stdout and a nil error on success, or stderr and a non-nil error on
+failure.
 
 
 
@@ -213,9 +224,10 @@ stdout and a nil error on success, or stderr and a non-nil error on failure.
 ``` go
 func (c Executable) String() string
 ```
-String runs the Executable and returns the standard output as a string,
-ignoring any error.  This is most useful for passing an executable into a
-fmt.Print style function.
+String runs the Executable and returns the standard output if the command
+succeeds, or stderr if the command fails.  If stderr is empty on failure, the
+Error() value of the error is returned. This is most useful for passing an
+executable into a fmt.Print style function.
 
 
 
