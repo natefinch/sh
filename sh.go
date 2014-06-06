@@ -39,13 +39,14 @@ func Cmd(name string, args0 ...string) func(args ...string) Executable {
 
 // Runner returns a function that will run the given shell command with
 // specified arguments. This is a convenience for creating one-off commands that
-// aren't going to be put into Pipe, but instead just run standalone.
+// aren't going to be put into Pipe, but instead just run standalone.  The
+// return values are the combined output and an error if any.
 //
 // The args that are passed to Runner are passed to the shell command when the
 // returned function is run, allowing you to pre-set some common arguments.
-func Runner(name string, args0 ...string) func(args ...string) string {
-	return func(args1 ...string) string {
-		return Executable{pipe.Exec(name, append(args0, args1...)...)}.String()
+func Runner(name string, args0 ...string) func(args ...string) (string, error) {
+	return func(args1 ...string) (string, error) {
+		return Executable{pipe.Exec(name, append(args0, args1...)...)}.Run()
 	}
 }
 
@@ -98,23 +99,17 @@ type Executable struct {
 // returns stdout and a nil error on success, or stderr and a non-nil error on
 // failure.
 func (c Executable) RunWith(stdin string) (string, error) {
-	stdout, stderr, err := pipe.DividedOutput(
+	out, err := pipe.CombinedOutput(
 		pipe.Line(pipe.Read(strings.NewReader(stdin)), c.Pipe),
 	)
-	if err != nil {
-		return string(stderr), err
-	}
-	return string(stdout), nil
+	return string(out), err
 }
 
-// Run executes the command and returns stdout and a nil error on success, or
-// stderr and a non-nil error on failure.
+// Run executes the command and returns the combined stdout and stderr, and the
+// error if any.
 func (c Executable) Run() (string, error) {
-	stdout, stderr, err := pipe.DividedOutput(c.Pipe)
-	if err != nil {
-		return string(stderr), err
-	}
-	return string(stdout), nil
+	out, err := pipe.CombinedOutput(c.Pipe)
+	return string(out), err
 }
 
 // String runs the Executable and returns the standard output if the command

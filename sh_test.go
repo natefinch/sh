@@ -41,11 +41,13 @@ func ExampleRunner() {
 	echo := sh.Runner("echo")
 
 	// functions created with runner call the underlying shell command
-	// immediately and return its standard output.
-	var s string = echo("Hi there!")
-	fmt.Print(s)
+	// immediately and return its standard output and an error if any.
+	out, err := echo("Hi there!")
+	fmt.Print(out)
+	fmt.Print(err)
 	// output:
 	// Hi there!
+	// <nil>
 }
 
 func ExamplePipe() {
