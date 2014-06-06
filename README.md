@@ -51,7 +51,7 @@ Hi there!
 
 ## func Runner
 ``` go
-func Runner(name string, args0 ...string) func(args ...string) string
+func Runner(name string, args0 ...string) func(args ...string) error
 ```
 Runner returns a function that will run the given shell command with
 specified arguments. This is a convenience for creating one-off commands that
@@ -68,13 +68,15 @@ echo := sh.Runner("echo")
 	
 // functions created with runner call the underlying shell command
 // immediately and return its standard output.
-var s string = echo("Hi there!")
-fmt.Print(s)
+out, err := echo("Hi there!")
+fmt.Println(out)
+fmt.Println(err)
 ```
 ##### Output:
 
 ```
 Hi there!
+<nil>
 ```
 
 ## type Executable
